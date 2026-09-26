@@ -1,0 +1,76 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 25.09.2026 16:33:49
+// Design Name: 
+// Module Name: alu_32
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+module alu_32(
+    input [31:0] a,
+    input [31:0] b,
+    input [4:0] alu_control,
+    output reg [31:0] result,
+    output reg zero
+);
+
+always @(*)
+begin
+    case (alu_control)
+//arithmetic op
+        5'b00000: result = a + b;                       // add
+        5'b00001: result = a - b;                       // sub
+        5'b00010: result = a * b;                       // mul
+        5'b00011: result = a / b;                       // div
+        5'b00100: result = a ** b;                      // power
+        5'b11110: result = a % b;                       // modulus
+//logical op
+        5'b00101: result = a && b;                      // logical and
+        5'b00110: result = a || b;                      // logical or
+        5'b00111: result = !a;                          // logical not a
+        5'b01000: result = !b;                          // logical not b
+//bitwise op
+        5'b01001: result = a & b;                       // bitwise and
+        5'b01010: result = a | b;                       // bitwise or
+        5'b01011: result = a ^ b;                       // bitwise xor
+        5'b01100: result = ~a;                          // bitwise not a
+        5'b01101: result = ~b;                          // bitwise not b
+//shift op
+        5'b01110: result = a << b;                      // left shift a
+        5'b01111: result = b << a;                      // left shift b
+        5'b10000: result = a >> b;                      // logical right shift a
+        5'b10001: result = b >> a;                      // logical right shift b
+        5'b10010: result = $signed(a) >>> b;            // arithmetic right shift a
+        5'b10011: result = $signed(b) >>> a;            // arithmetic right shift b
+//comparistion op
+        5'b10100: result = (a == b);                    // equal
+        5'b10101: result = (a != b);                    // not equal
+        5'b10110: result = (a > b);                     // greater than
+        5'b10111: result = (a < b);                     // less than
+        5'b11000: result = (a >= b);                    // greater than or equal
+        5'b11001: result = (a <= b);                    // less than or equal
+//signed comp op
+        5'b11010: result = ($signed(a) > $signed(b));   // signed greater than
+        5'b11011: result = ($signed(a) < $signed(b));   // signed less than
+        5'b11100: result = ($signed(a) >= $signed(b));  // signed greater than or equal
+        5'b11101: result = ($signed(a) <= $signed(b));  // signed less than or equal
+        default: result = 32'b0;
+    endcase
+ if (result == 32'b0)
+     zero = 1'b1;
+else
+     zero = 1'b0;
+end
+endmodule
