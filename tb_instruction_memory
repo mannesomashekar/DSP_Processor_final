@@ -1,0 +1,39 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 26.09.2026 16:34:28
+// Design Name: 
+// Module Name: tb_instruction_memory
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+module tb_instruction_memory;
+reg [31:0] address;
+wire [31:0] instruction;
+instruction_memory uut(
+    .address(address),
+    .instruction(instruction)
+);
+initial
+begin uut.memory[0] = 32'h12345678;
+    uut.memory[1] = 32'hAABBCCDD;
+    uut.memory[2] = 32'h11223344;
+    uut.memory[3] = 32'h55667788;
+    #10 address = 32'd0;
+    #10 address = 32'd4;
+    #10 address = 32'd8;
+    #10 address = 32'd12;
+    #10 $finish;
+end
+endmodule
