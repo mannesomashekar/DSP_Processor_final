@@ -1,0 +1,62 @@
+`timescale 1ns / 1ps
+
+module tb_alu_32;
+
+reg [31:0] a;
+reg [31:0] b;
+reg [4:0] alu_control;
+wire [31:0] result;
+wire zero;
+
+alu_32 uut(
+    .a(a),
+    .b(b),
+    .alu_control(alu_control),
+    .result(result),
+    .zero(zero)
+);
+
+initial
+begin
+    #10 a = 32'd20; b = 32'd5; alu_control = 5'b00000; // add
+    #10 a = 32'd20; b = 32'd5; alu_control = 5'b00001; // sub
+    #10 a = 32'd20; b = 32'd5; alu_control = 5'b00010; // mul
+    #10 a = 32'd20; b = 32'd5; alu_control = 5'b00011; // div
+    #10 a = 32'd2; b = 32'd5; alu_control = 5'b00100; // power
+    #10 a = 32'd20; b = 32'd6; alu_control = 5'b11110; // modulus
+
+    #10 a = 32'd1; b = 32'd1; alu_control = 5'b00101; // logical and
+    #10 a = 32'd1; b = 32'd0; alu_control = 5'b00110; // logical or
+    #10 a = 32'd0; b = 32'd5; alu_control = 5'b00111; // logical not a
+    #10 a = 32'd5; b = 32'd0; alu_control = 5'b01000; // logical not b
+
+    #10 a = 32'hF0F0F0F0; b = 32'h0F0F0F0F; alu_control = 5'b01001; // bitwise and
+    #10 a = 32'hF0F0F0F0; b = 32'h0F0F0F0F; alu_control = 5'b01010; // bitwise or
+    #10 a = 32'hF0F0F0F0; b = 32'h0F0F0F0F; alu_control = 5'b01011; // bitwise xor
+    #10 a = 32'hF0F0F0F0; b = 32'h0F0F0F0F; alu_control = 5'b01100; // bitwise not a
+    #10 a = 32'hF0F0F0F0; b = 32'h0F0F0F0F; alu_control = 5'b01101; // bitwise not b
+
+    #10 a = 32'h0000000F; b = 32'd2; alu_control = 5'b01110; // left shift a
+    #10 a = 32'd2; b = 32'h0000000F; alu_control = 5'b01111; // left shift b
+    #10 a = 32'h0000000F; b = 32'd2; alu_control = 5'b10000; // logical right shift a
+    #10 a = 32'd2; b = 32'h0000000F; alu_control = 5'b10001; // logical right shift b
+    #10 a = 32'hFFFFFFF0; b = 32'd2; alu_control = 5'b10010; // arithmetic right shift a
+    #10 a = 32'd2; b = 32'hFFFFFFF0; alu_control = 5'b10011; // arithmetic right shift b
+
+    #10 a = 32'd10; b = 32'd10; alu_control = 5'b10100; // equal
+    #10 a = 32'd10; b = 32'd5; alu_control = 5'b10101; // not equal
+    #10 a = 32'd20; b = 32'd10; alu_control = 5'b10110; // greater than
+    #10 a = 32'd10; b = 32'd20; alu_control = 5'b10111; // less than
+    #10 a = 32'd20; b = 32'd10; alu_control = 5'b11000; // greater than or equal
+    #10 a = 32'd10; b = 32'd20; alu_control = 5'b11001; // less than or equal
+
+    #10 a = 32'hFFFFFFFF; b = 32'd1; alu_control = 5'b11010; // signed greater than
+    #10 a = 32'hFFFFFFFF; b = 32'd1; alu_control = 5'b11011; // signed less than
+    #10 a = 32'hFFFFFFFF; b = 32'd1; alu_control = 5'b11100; // signed greater than or equal
+    #10 a = 32'hFFFFFFFF; b = 32'd1; alu_control = 5'b11101; // signed less than or equal
+
+    #10 a = 32'd0; b = 32'd0; alu_control = 5'b00000; // zero flag
+
+    #10 $finish;
+end
+endmodule
