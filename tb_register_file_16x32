@@ -1,0 +1,182 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 23.09.2026 19:32:53
+// Design Name: 
+// Module Name: tb_register_file_16x32
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+module tb_register_file_16x32;
+
+reg clk;
+reg reset;
+reg write_enable;
+reg read_enable;
+reg [3:0] write_addr;
+reg [3:0] read_addr;
+reg [31:0] d;
+wire [31:0] q;
+
+register_file_16x32 uut(
+    .clk(clk),
+    .reset(reset),
+    .write_enable(write_enable),
+    .read_enable(read_enable),
+    .write_addr(write_addr),
+    .read_addr(read_addr),
+    .d(d),
+    .q(q)
+);
+
+always #5 clk = ~clk;
+
+initial
+begin
+    clk = 0;
+    reset = 1;
+    write_enable = 0;
+    read_enable = 0;
+    write_addr = 0;
+    read_addr = 0;
+    d = 0;
+
+    #10;
+    reset = 0;
+
+    write_enable = 1;
+
+    write_addr = 0;
+    d = 32'h11111111;
+    #10;
+
+    write_addr = 1;
+    d = 32'h22222222;
+    #10;
+
+    write_addr = 2;
+    d = 32'h33333333;
+    #10;
+
+    write_addr = 3;
+    d = 32'h44444444;
+    #10;
+
+    write_addr = 4;
+    d = 32'h55555555;
+    #10;
+
+    write_addr = 5;
+    d = 32'h66666666;
+    #10;
+
+    write_addr = 6;
+    d = 32'h77777777;
+    #10;
+
+    write_addr = 7;
+    d = 32'h88888888;
+    #10;
+
+    write_addr = 8;
+    d = 32'h99999999;
+    #10;
+
+    write_addr = 9;
+    d = 32'hAAAAAAAA;
+    #10;
+
+    write_addr = 10;
+    d = 32'hBBBBBBBB;
+    #10;
+
+    write_addr = 11;
+    d = 32'hCCCCCCCC;
+    #10;
+
+    write_addr = 12;
+    d = 32'hDDDDDDDD;
+    #10;
+
+    write_addr = 13;
+    d = 32'hEEEEEEEE;
+    #10;
+
+    write_addr = 14;
+    d = 32'hFFFFFFFF;
+    #10;
+
+    write_addr = 15;
+    d = 32'h12345678;
+    #10;
+
+    write_enable = 0;
+    read_enable = 1;
+
+    read_addr = 0;
+    #10;
+
+    read_addr = 1;
+    #10;
+
+    read_addr = 2;
+    #10;
+
+    read_addr = 3;
+    #10;
+
+    read_addr = 4;
+    #10;
+
+    read_addr = 5;
+    #10;
+
+    read_addr = 6;
+    #10;
+
+    read_addr = 7;
+    #10;
+
+    read_addr = 8;
+    #10;
+
+    read_addr = 9;
+    #10;
+
+    read_addr = 10;
+    #10;
+
+    read_addr = 11;
+    #10;
+
+    read_addr = 12;
+    #10;
+
+    read_addr = 13;
+    #10;
+
+    read_addr = 14;
+    #10;
+
+    read_addr = 15;
+    #10;
+
+    read_enable = 0;
+
+    #10;
+    $finish;
+end
+
+endmodule
