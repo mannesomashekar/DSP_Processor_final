@@ -1,0 +1,79 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 26.09.2026 12:01:38
+// Design Name: 
+// Module Name: tb_simd_mac_4lane
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+module tb_simd_mac_4lane;
+
+reg clk;
+reg reset;
+reg enable;
+reg [31:0] a0;
+reg [31:0] b0;
+reg [31:0] a1;
+reg [31:0] b1;
+reg [31:0] a2;
+reg [31:0] b2;
+reg [31:0] a3;
+reg [31:0] b3;
+wire [63:0] acc;
+
+simd_mac_4lane uut(
+    .clk(clk),
+    .reset(reset),
+    .enable(enable),
+    .a0(a0),
+    .b0(b0),
+    .a1(a1),
+    .b1(b1),
+    .a2(a2),
+    .b2(b2),
+    .a3(a3),
+    .b3(b3),
+    .acc(acc)
+);
+
+always #5 clk = ~clk;
+
+initial
+begin
+    clk = 0;
+    reset = 1;
+    enable = 0;
+    a0 = 0;
+    b0 = 0;
+    a1 = 0;
+    b1 = 0;
+    a2 = 0;
+    b2 = 0;
+    a3 = 0;
+    b3 = 0;
+
+    #10 reset = 0;
+
+    #10 a0 = 32'd2; b0 = 32'd3; a1 = 32'd4; b1 = 32'd5; a2 = 32'd6; b2 = 32'd7; a3 = 32'd8; b3 = 32'd9; enable = 1;
+
+    #10 a0 = 32'd10; b0 = 32'd2; a1 = 32'd5; b1 = 32'd4; a2 = 32'd3; b2 = 32'd6; a3 = 32'd7; b3 = 32'd8;
+
+    #10 a0 = 32'd1; b0 = 32'd10; a1 = 32'd2; b1 = 32'd20; a2 = 32'd3; b2 = 32'd30; a3 = 32'd4; b3 = 32'd40;
+
+    #10 enable = 0;
+
+    #10 $finish;
+end
+endmodule
