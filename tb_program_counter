@@ -1,0 +1,64 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 26.09.2026 12:06:30
+// Design Name: 
+// Module Name: tb_program_counter
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+`timescale 1ns / 1ps
+
+module tb_program_counter;
+
+reg clk;
+reg reset;
+reg enable;
+reg [31:0] next_pc;
+wire [31:0] pc;
+
+program_counter uut(
+    .clk(clk),
+    .reset(reset),
+    .enable(enable),
+    .next_pc(next_pc),
+    .pc(pc)
+);
+
+always #5 clk = ~clk;
+
+initial
+begin
+    clk = 0;
+    reset = 1;
+    enable = 0;
+    next_pc = 0;
+
+    #10 reset = 0;
+
+    #10 enable = 1; next_pc = 32'd4;
+    #10 next_pc = 32'd8;
+    #10 next_pc = 32'd12;
+    #10 next_pc = 32'd16;
+
+    #10 enable = 0; next_pc = 32'd20;
+
+    #10 enable = 1; next_pc = 32'd24;
+
+    #10 reset = 1;
+    #10 reset = 0;
+
+    #10 $finish;
+end
+endmodule
