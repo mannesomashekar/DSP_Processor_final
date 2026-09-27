@@ -1,4 +1,24 @@
 `timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 27.09.2026 16:27:02
+// Design Name: 
+// Module Name: tb_datapath
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+`timescale 1ns / 1ps
 
 module tb_datapath;
 
@@ -17,6 +37,8 @@ reg [4:0] alu_control;
 
 wire [31:0] result;
 wire [31:0] write_data;
+wire [31:0] memory_address;
+wire [31:0] memory_write_data;
 wire done;
 
 datapath dut(
@@ -33,6 +55,8 @@ datapath dut(
     .alu_control(alu_control),
     .result(result),
     .write_data(write_data),
+    .memory_address(memory_address),
+    .memory_write_data(memory_write_data),
     .done(done)
 );
 
@@ -57,43 +81,62 @@ begin
 
     reset = 1'b0;
 
-    // initialize registers
-    dut.register_file.registers[0] = 32'd2;
-    dut.register_file.registers[1] = 32'd3;
-    dut.register_file.registers[2] = 32'd4;
-    dut.register_file.registers[3] = 32'd5;
-    dut.register_file.registers[4] = 32'd6;
-    dut.register_file.registers[5] = 32'd7;
-    dut.register_file.registers[6] = 32'd8;
-    dut.register_file.registers[7] = 32'd9;
+    // r2 = value to store
+    // r1 = base address
+    dut.register_file.registers[1] = 32'd0;
+    dut.register_file.registers[2] = 32'h12345678;
 
-    // SIMD instruction
-    instruction = 32'b011111_1000_0000_0000_00000000000000;
+    // store r2 -> memory[0]
+    instruction = 32'b100001_0000_0001_0010_00000000000000;
 
-    alu_enable = 1'b0;
-    simd_enable = 1'b1;
-    reg_write = 1'b1;
+    alu_enable = 1'b1;
+    simd_enable = 1'b0;
+    reg_write = 1'b0;
+    alu_src = 1'b1;
+    mem_read = 1'b0;
+    mem_write = 1'b1;
+    mem_to_reg = 1'b0;
+    alu_control = 5'b00000;
 
-    #200;
+    #80;
 
-    $display("SIMD MAC TEST");
-    $display("R0 = %d",dut.register_file.registers[0]);
-    $display("R1 = %d",dut.register_file.registers[1]);
-    $display("R2 = %d",dut.register_file.registers[2]);
-    $display("R3 = %d",dut.register_file.registers[3]);
-    $display("R4 = %d",dut.register_file.registers[4]);
-    $display("R5 = %d",dut.register_file.registers[5]);
-    $display("R6 = %d",dut.register_file.registers[6]);
-    $display("R7 = %d",dut.register_file.registers[7]);
-    $display("R8 = %d",dut.register_file.registers[8]);
-    $display("result = %d",result);
-    $display("write_data = %d",write_data);
+    $display("STORE TEST");
+    $display("address = %d",memory_address);
+    $display("write_data = %h",memory_write_data);
+    $display("memory[0] = %h",dut.data_mem.memory[0]);
     $display("done = %b",done);
 
-    if (dut.register_file.registers[8] == 32'd140)
-        $display("SIMD MAC PASS");
+    if (dut.data_mem.memory[0] == 32'h12345678)
+        $display("STORE PASS");
     else
-        $display("SIMD MAC FAIL");
+        $display("STORE FAIL");
+
+    #10;
+
+    // load memory[0] -> r3
+    instruction = 32'b100000_0011_0001_0000_00000000000000;
+
+    alu_enable = 1'b1;
+    simd_enable = 1'b0;
+    reg_write = 1'b1;
+    alu_src = 1'b1;
+    mem_read = 1'b1;
+    mem_write = 1'b0;
+    mem_to_reg = 1'b1;
+    alu_control = 5'b00000;
+
+    #80;
+
+    $display("LOAD TEST");
+    $display("address = %d",memory_address);
+    $display("result = %h",result);
+    $display("r3 = %h",dut.register_file.registers[3]);
+    $display("done = %b",done);
+
+    if (dut.register_file.registers[3] == 32'h12345678)
+        $display("LOAD PASS");
+    else
+        $display("LOAD FAIL");
 
     #10;
 
