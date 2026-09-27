@@ -1,0 +1,136 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 27.09.2026 19:23:35
+// Design Name: 
+// Module Name: dsp_processor
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+`timescale 1ns / 1ps
+
+module dsp_processor(
+    input clk,
+    input reset
+);
+
+wire [31:0] pc;
+wire [31:0] next_pc;
+wire [31:0] instruction;
+
+wire [5:0] opcode;
+wire [3:0] rd;
+wire [3:0] rs1;
+wire [3:0] rs2;
+wire [4:0] alu_control;
+
+wire alu_enable;
+wire simd_enable;
+wire reg_write;
+wire alu_src;
+wire mem_read;
+wire mem_write;
+wire mem_to_reg;
+
+wire alu_select;
+wire simd_select;
+wire register_write;
+wire immediate_select;
+wire memory_read;
+wire memory_write;
+wire writeback_select;
+
+wire [31:0] result;
+wire [31:0] write_data;
+wire [31:0] memory_address;
+wire [31:0] memory_write_data;
+wire done;
+
+wire pc_enable;
+
+assign pc_enable = done;
+
+program_counter pc_unit(
+    .clk(clk),
+    .reset(reset),
+    .enable(pc_enable),
+    .next_pc(next_pc),
+    .pc(pc)
+);
+
+next_pc_logic next_pc_unit(
+    .pc(pc),
+    .next_pc(next_pc)
+);
+
+instruction_memory instruction_mem(
+    .address(pc),
+    .instruction(instruction)
+);
+
+instruction_decoder decoder(
+    .instruction(instruction),
+    .opcode(opcode),
+    .rd(rd),
+    .rs1(rs1),
+    .rs2(rs2),
+    .alu_control(alu_control),
+    .alu_enable(alu_enable),
+    .simd_enable(simd_enable),
+    .reg_write(reg_write),
+    .alu_src(alu_src),
+    .mem_read(mem_read),
+    .mem_write(mem_write),
+    .mem_to_reg(mem_to_reg)
+);
+
+control_unit control(
+    .alu_enable(alu_enable),
+    .simd_enable(simd_enable),
+    .reg_write(reg_write),
+    .alu_src(alu_src),
+    .mem_read(mem_read),
+    .mem_write(mem_write),
+    .mem_to_reg(mem_to_reg),
+    .alu_select(alu_select),
+    .simd_select(simd_select),
+    .register_write(register_write),
+    .immediate_select(immediate_select),
+    .memory_read(memory_read),
+    .memory_write(memory_write),
+    .writeback_select(writeback_select)
+);
+
+datapath data_path(
+    .clk(clk),
+    .reset(reset),
+    .instruction(instruction),
+
+    .alu_enable(alu_select),
+    .simd_enable(simd_select),
+    .reg_write(register_write),
+    .alu_src(immediate_select),
+    .mem_read(memory_read),
+    .mem_write(memory_write),
+    .mem_to_reg(writeback_select),
+    .alu_control(alu_control),
+
+    .result(result),
+    .write_data(write_data),
+    .memory_address(memory_address),
+    .memory_write_data(memory_write_data),
+    .done(done)
+);
+
+endmodule
