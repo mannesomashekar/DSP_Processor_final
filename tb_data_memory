@@ -1,0 +1,95 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 27.09.2026 12:33:18
+// Design Name: 
+// Module Name: tb_data_memory
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+`timescale 1ns / 1ps
+
+module tb_data_memory;
+
+reg clk;
+reg reset;
+reg mem_read;
+reg mem_write;
+reg [31:0] address;
+reg [31:0] write_data;
+
+wire [31:0] read_data;
+
+data_memory dut(
+    .clk(clk),
+    .reset(reset),
+    .mem_read(mem_read),
+    .mem_write(mem_write),
+    .address(address),
+    .write_data(write_data),
+    .read_data(read_data)
+);
+
+always #5 clk = ~clk;
+
+initial
+begin
+
+    clk = 1'b0;
+    reset = 1'b1;
+    mem_read = 1'b0;
+    mem_write = 1'b0;
+    address = 32'b0;
+    write_data = 32'b0;
+
+    #10;
+
+    reset = 1'b0;
+
+    address = 32'd0;
+    write_data = 32'h12345678;
+    mem_write = 1'b1;
+
+    #10;
+
+    mem_write = 1'b0;
+    mem_read = 1'b1;
+
+    #10;
+
+    $display("test 1");
+    $display("address = %d",address);
+    $display("read_data = %h",read_data);
+
+    address = 32'd4;
+    write_data = 32'hAABBCCDD;
+    mem_read = 1'b0;
+    mem_write = 1'b1;
+
+    #10;
+
+    mem_write = 1'b0;
+    mem_read = 1'b1;
+
+    #10;
+
+    $display("test 2");
+    $display("address = %d",address);
+    $display("read_data = %h",read_data);
+
+    #10;
+
+    $finish;
+end
+endmodule
