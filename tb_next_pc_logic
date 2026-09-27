@@ -1,0 +1,69 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 27.09.2026 16:14:19
+// Design Name: 
+// Module Name: tb_next_pc_logic
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+`timescale 1ns / 1ps
+
+module tb_next_pc_logic;
+
+reg [31:0] pc;
+
+wire [31:0] next_pc;
+
+next_pc_logic dut(
+    .pc(pc),
+    .next_pc(next_pc)
+);
+
+initial
+begin
+
+    pc = 32'd0;
+    #10;
+
+    $display("test 1");
+    $display("pc = %d",pc);
+    $display("next_pc = %d",next_pc);
+
+    pc = 32'd4;
+    #10;
+
+    $display("test 2");
+    $display("pc = %d",pc);
+    $display("next_pc = %d",next_pc);
+
+    pc = 32'd100;
+    #10;
+
+    $display("test 3");
+    $display("pc = %d",pc);
+    $display("next_pc = %d",next_pc);
+
+    pc = 32'h000000FC;
+    #10;
+
+    $display("test 4");
+    $display("pc = %h",pc);
+    $display("next_pc = %h",next_pc);
+
+    #10;
+
+    $finish;
+end
+endmodule
