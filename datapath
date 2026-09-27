@@ -36,6 +36,8 @@ module datapath(
 
     output reg [31:0] result,
     output reg [31:0] write_data,
+    output reg [31:0] memory_address,
+    output reg [31:0] memory_write_data,
     output reg done
 );
 
@@ -74,8 +76,43 @@ register_file_16x32 register_file(
     .q(register_read_data)
 );
 
+wire [31:0] memory_read_data;
+
+wire memory_read_enable;
+wire memory_write_enable;
+
+reg [5:0] state;
+
+assign memory_read_enable = (state == LOAD_READ);
+assign memory_write_enable = (state == STORE_WRITE);
+
+data_memory data_mem(
+    .clk(clk),
+    .reset(reset),
+    .mem_read(memory_read_enable),
+    .mem_write(memory_write_enable),
+    .address(memory_address),
+    .write_data(memory_write_data),
+    .read_data(memory_read_data)
+);
+
 reg [31:0] operand_a;
 reg [31:0] operand_b;
+
+wire [31:0] alu_b;
+
+assign alu_b = alu_src ? immediate : operand_b;
+
+wire [31:0] alu_result;
+wire alu_zero;
+
+alu_32 alu(
+    .a(operand_a),
+    .b(alu_b),
+    .alu_control(alu_control),
+    .result(alu_result),
+    .zero(alu_zero)
+);
 
 reg [31:0] simd_a0;
 reg [31:0] simd_b0;
@@ -104,22 +141,6 @@ simd_mac_4lane simd_mac(
     .acc(simd_result)
 );
 
-wire [31:0] alu_b;
-assign alu_b = alu_src ? immediate : operand_b;
-
-wire [31:0] alu_result;
-wire alu_zero;
-
-alu_32 alu(
-    .a(operand_a),
-    .b(alu_b),
-    .alu_control(alu_control),
-    .result(alu_result),
-    .zero(alu_zero)
-);
-
-reg [5:0] state;
-
 localparam IDLE = 6'd0;
 
 localparam ALU_READ_RS1 = 6'd1;
@@ -133,24 +154,35 @@ localparam SIMD_READ_A0 = 6'd10;
 localparam SIMD_CAPTURE_A0 = 6'd11;
 localparam SIMD_READ_B0 = 6'd12;
 localparam SIMD_CAPTURE_B0 = 6'd13;
-
 localparam SIMD_READ_A1 = 6'd14;
 localparam SIMD_CAPTURE_A1 = 6'd15;
 localparam SIMD_READ_B1 = 6'd16;
 localparam SIMD_CAPTURE_B1 = 6'd17;
-
 localparam SIMD_READ_A2 = 6'd18;
 localparam SIMD_CAPTURE_A2 = 6'd19;
 localparam SIMD_READ_B2 = 6'd20;
 localparam SIMD_CAPTURE_B2 = 6'd21;
-
 localparam SIMD_READ_A3 = 6'd22;
 localparam SIMD_CAPTURE_A3 = 6'd23;
 localparam SIMD_READ_B3 = 6'd24;
 localparam SIMD_CAPTURE_B3 = 6'd25;
-
 localparam SIMD_EXECUTE = 6'd26;
-localparam SIMD_WRITE_BACK = 6'd27;
+localparam SIMD_WAIT = 6'd27;
+localparam SIMD_WRITE_BACK = 6'd28;
+
+localparam LOAD_ADDRESS = 6'd30;
+localparam LOAD_READ = 6'd31;
+localparam LOAD_WAIT = 6'd32;
+localparam LOAD_WRITE_BACK = 6'd33;
+
+localparam STORE_READ_RS1 = 6'd40;
+localparam STORE_CAPTURE_RS1 = 6'd41;
+localparam STORE_READ_RS2 = 6'd42;
+localparam STORE_CAPTURE_RS2 = 6'd43;
+localparam STORE_WRITE = 6'd44;
+localparam STORE_DONE = 6'd45;
+
+localparam WAIT_NEXT = 6'd46;
 
 always @(posedge clk or posedge reset)
 begin
@@ -172,6 +204,8 @@ begin
 
         result <= 32'b0;
         write_data <= 32'b0;
+        memory_address <= 32'b0;
+        memory_write_data <= 32'b0;
         done <= 1'b0;
 
         register_write_enable <= 1'b0;
@@ -199,6 +233,21 @@ begin
                     register_read_enable <= 1'b1;
                     state <= SIMD_READ_A0;
                 end
+
+                else if (mem_read)
+                begin
+                    register_read_addr <= rs1;
+                    register_read_enable <= 1'b1;
+                    state <= ALU_READ_RS1;
+                end
+
+                else if (mem_write)
+                begin
+                    register_read_addr <= rs1;
+                    register_read_enable <= 1'b1;
+                    state <= STORE_READ_RS1;
+                end
+
                 else if (alu_enable)
                 begin
                     register_read_addr <= rs1;
@@ -216,11 +265,18 @@ begin
             begin
                 operand_a <= register_read_data;
 
-                if (alu_src)
+                if (mem_read)
+                begin
+                    register_read_enable <= 1'b0;
+                    state <= LOAD_ADDRESS;
+                end
+
+                else if (alu_src)
                 begin
                     register_read_enable <= 1'b0;
                     state <= ALU_EXECUTE;
                 end
+
                 else
                 begin
                     register_read_addr <= rs2;
@@ -258,6 +314,82 @@ begin
 
                 write_data <= result;
                 done <= 1'b1;
+                state <= WAIT_NEXT;
+            end
+
+            LOAD_ADDRESS:
+            begin
+                memory_address <= operand_a + immediate;
+                state <= LOAD_READ;
+            end
+
+            LOAD_READ:
+            begin
+                state <= LOAD_WAIT;
+            end
+
+            LOAD_WAIT:
+            begin
+                result <= memory_read_data;
+                state <= LOAD_WRITE_BACK;
+            end
+
+            LOAD_WRITE_BACK:
+            begin
+                if (reg_write)
+                begin
+                    register_write_enable <= 1'b1;
+                    register_write_addr <= rd;
+                    register_write_data <= result;
+                end
+
+                write_data <= result;
+                done <= 1'b1;
+                state <= WAIT_NEXT;
+            end
+
+            STORE_READ_RS1:
+            begin
+                state <= STORE_CAPTURE_RS1;
+            end
+
+            STORE_CAPTURE_RS1:
+            begin
+                operand_a <= register_read_data;
+                register_read_addr <= rs2;
+                register_read_enable <= 1'b1;
+                state <= STORE_READ_RS2;
+            end
+
+            STORE_READ_RS2:
+            begin
+                state <= STORE_CAPTURE_RS2;
+            end
+
+            STORE_CAPTURE_RS2:
+            begin
+                operand_b <= register_read_data;
+
+                memory_address <= operand_a + immediate;
+                memory_write_data <= register_read_data;
+
+                register_read_enable <= 1'b0;
+                state <= STORE_WRITE;
+            end
+
+            STORE_WRITE:
+            begin
+                state <= STORE_DONE;
+            end
+
+            STORE_DONE:
+            begin
+                done <= 1'b1;
+                state <= WAIT_NEXT;
+            end
+
+            WAIT_NEXT:
+            begin
                 state <= IDLE;
             end
 
@@ -367,6 +499,11 @@ begin
             SIMD_EXECUTE:
             begin
                 simd_mac_enable <= 1'b1;
+                state <= SIMD_WAIT;
+            end
+
+            SIMD_WAIT:
+            begin
                 state <= SIMD_WRITE_BACK;
             end
 
@@ -382,7 +519,7 @@ begin
                 result <= simd_result[31:0];
                 write_data <= simd_result[31:0];
                 done <= 1'b1;
-                state <= IDLE;
+                state <= WAIT_NEXT;
             end
 
             default:
