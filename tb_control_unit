@@ -1,0 +1,161 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 27.09.2026 11:07:33
+// Design Name: 
+// Module Name: tb_control_unit
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+`timescale 1ns / 1ps
+
+module tb_control_unit;
+
+reg alu_enable;
+reg simd_enable;
+reg reg_write;
+reg alu_src;
+reg mem_read;
+reg mem_write;
+reg mem_to_reg;
+
+wire alu_select;
+wire simd_select;
+wire register_write;
+wire immediate_select;
+wire memory_read;
+wire memory_write;
+wire writeback_select;
+
+control_unit dut(
+    .alu_enable(alu_enable),
+    .simd_enable(simd_enable),
+    .reg_write(reg_write),
+    .alu_src(alu_src),
+    .mem_read(mem_read),
+    .mem_write(mem_write),
+    .mem_to_reg(mem_to_reg),
+
+    .alu_select(alu_select),
+    .simd_select(simd_select),
+    .register_write(register_write),
+    .immediate_select(immediate_select),
+    .memory_read(memory_read),
+    .memory_write(memory_write),
+    .writeback_select(writeback_select)
+);
+
+initial
+begin
+
+    alu_enable = 1'b1;
+    simd_enable = 1'b0;
+    reg_write = 1'b1;
+    alu_src = 1'b0;
+    mem_read = 1'b0;
+    mem_write = 1'b0;
+    mem_to_reg = 1'b0;
+
+    #10;
+
+    $display("ALU");
+    $display("alu_select = %b",alu_select);
+    $display("simd_select = %b",simd_select);
+    $display("register_write = %b",register_write);
+    $display("immediate_select = %b",immediate_select);
+    $display("memory_read = %b",memory_read);
+    $display("memory_write = %b",memory_write);
+    $display("writeback_select = %b",writeback_select);
+
+    alu_enable = 1'b0;
+    simd_enable = 1'b1;
+    reg_write = 1'b1;
+    alu_src = 1'b0;
+    mem_read = 1'b0;
+    mem_write = 1'b0;
+    mem_to_reg = 1'b0;
+
+    #10;
+
+    $display("SIMD MAC");
+    $display("alu_select = %b",alu_select);
+    $display("simd_select = %b",simd_select);
+    $display("register_write = %b",register_write);
+    $display("immediate_select = %b",immediate_select);
+    $display("memory_read = %b",memory_read);
+    $display("memory_write = %b",memory_write);
+    $display("writeback_select = %b",writeback_select);
+
+    alu_enable = 1'b1;
+    simd_enable = 1'b0;
+    reg_write = 1'b1;
+    alu_src = 1'b1;
+    mem_read = 1'b1;
+    mem_write = 1'b0;
+    mem_to_reg = 1'b1;
+
+    #10;
+
+    $display("LOAD");
+    $display("alu_select = %b",alu_select);
+    $display("simd_select = %b",simd_select);
+    $display("register_write = %b",register_write);
+    $display("immediate_select = %b",immediate_select);
+    $display("memory_read = %b",memory_read);
+    $display("memory_write = %b",memory_write);
+    $display("writeback_select = %b",writeback_select);
+
+    alu_enable = 1'b1;
+    simd_enable = 1'b0;
+    reg_write = 1'b0;
+    alu_src = 1'b1;
+    mem_read = 1'b0;
+    mem_write = 1'b1;
+    mem_to_reg = 1'b0;
+
+    #10;
+
+    $display("STORE");
+    $display("alu_select = %b",alu_select);
+    $display("simd_select = %b",simd_select);
+    $display("register_write = %b",register_write);
+    $display("immediate_select = %b",immediate_select);
+    $display("memory_read = %b",memory_read);
+    $display("memory_write = %b",memory_write);
+    $display("writeback_select = %b",writeback_select);
+
+    alu_enable = 1'b0;
+    simd_enable = 1'b0;
+    reg_write = 1'b0;
+    alu_src = 1'b0;
+    mem_read = 1'b0;
+    mem_write = 1'b0;
+    mem_to_reg = 1'b0;
+
+    #10;
+
+    $display("INVALID");
+    $display("alu_select = %b",alu_select);
+    $display("simd_select = %b",simd_select);
+    $display("register_write = %b",register_write);
+    $display("immediate_select = %b",immediate_select);
+    $display("memory_read = %b",memory_read);
+    $display("memory_write = %b",memory_write);
+    $display("writeback_select = %b",writeback_select);
+
+    #10;
+
+    $finish;
+end
+endmodule
