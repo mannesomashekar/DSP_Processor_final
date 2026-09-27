@@ -1,0 +1,94 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 27.09.2026 16:35:00
+// Design Name: 
+// Module Name: tb_simd_datapath
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+`timescale 1ns / 1ps
+
+module tb_simd_datapath;
+
+reg clk;
+reg reset;
+reg enable;
+reg [3:0] rd;
+
+wire [31:0] result;
+wire write_enable;
+wire [3:0] write_addr;
+wire done;
+
+simd_datapath dut(
+    .clk(clk),
+    .reset(reset),
+    .enable(enable),
+    .rd(rd),
+    .result(result),
+    .write_enable(write_enable),
+    .write_addr(write_addr),
+    .done(done)
+);
+
+always #5 clk = ~clk;
+
+initial
+begin
+    clk = 1'b0;
+    reset = 1'b1;
+    enable = 1'b0;
+    rd = 4'd8;
+
+    #10;
+
+    reset = 1'b0;
+
+    // initialize registers for simulation
+    dut.register_file.registers[0] = 32'd2;
+    dut.register_file.registers[1] = 32'd3;
+    dut.register_file.registers[2] = 32'd4;
+    dut.register_file.registers[3] = 32'd5;
+    dut.register_file.registers[4] = 32'd6;
+    dut.register_file.registers[5] = 32'd7;
+    dut.register_file.registers[6] = 32'd8;
+    dut.register_file.registers[7] = 32'd9;
+
+    enable = 1'b1;
+
+    #200;
+
+    $display("SIMD MAC TEST");
+    $display("R0 = %d",dut.register_file.registers[0]);
+    $display("R1 = %d",dut.register_file.registers[1]);
+    $display("R2 = %d",dut.register_file.registers[2]);
+    $display("R3 = %d",dut.register_file.registers[3]);
+    $display("R4 = %d",dut.register_file.registers[4]);
+    $display("R5 = %d",dut.register_file.registers[5]);
+    $display("R6 = %d",dut.register_file.registers[6]);
+    $display("R7 = %d",dut.register_file.registers[7]);
+    $display("R8 = %d",dut.register_file.registers[8]);
+    $display("result = %d",result);
+    $display("write_addr = %d",write_addr);
+    $display("done = %b",done);
+
+    if (result == 32'd158)
+        $display("SIMD MAC PASS");
+    else
+        $display("SIMD MAC FAIL");
+
+    #10;
+
+    $finish;
