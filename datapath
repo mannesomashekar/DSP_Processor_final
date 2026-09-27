@@ -77,16 +77,34 @@ register_file_16x32 register_file(
 reg [31:0] operand_a;
 reg [31:0] operand_b;
 
-reg [2:0] state;
+reg [31:0] simd_a0;
+reg [31:0] simd_b0;
+reg [31:0] simd_a1;
+reg [31:0] simd_b1;
+reg [31:0] simd_a2;
+reg [31:0] simd_b2;
+reg [31:0] simd_a3;
+reg [31:0] simd_b3;
 
-localparam IDLE = 3'b000;
-localparam READ_RS1 = 3'b001;
-localparam READ_RS2 = 3'b010;
-localparam EXECUTE = 3'b011;
-localparam WRITE_BACK = 3'b100;
+reg simd_mac_enable;
+wire [63:0] simd_result;
+
+simd_mac_4lane simd_mac(
+    .clk(clk),
+    .reset(reset),
+    .enable(simd_mac_enable),
+    .a0(simd_a0),
+    .b0(simd_b0),
+    .a1(simd_a1),
+    .b1(simd_b1),
+    .a2(simd_a2),
+    .b2(simd_b2),
+    .a3(simd_a3),
+    .b3(simd_b3),
+    .acc(simd_result)
+);
 
 wire [31:0] alu_b;
-
 assign alu_b = alu_src ? immediate : operand_b;
 
 wire [31:0] alu_result;
@@ -100,13 +118,58 @@ alu_32 alu(
     .zero(alu_zero)
 );
 
+reg [5:0] state;
+
+localparam IDLE = 6'd0;
+
+localparam ALU_READ_RS1 = 6'd1;
+localparam ALU_CAPTURE_RS1 = 6'd2;
+localparam ALU_READ_RS2 = 6'd3;
+localparam ALU_CAPTURE_RS2 = 6'd4;
+localparam ALU_EXECUTE = 6'd5;
+localparam ALU_WRITE_BACK = 6'd6;
+
+localparam SIMD_READ_A0 = 6'd10;
+localparam SIMD_CAPTURE_A0 = 6'd11;
+localparam SIMD_READ_B0 = 6'd12;
+localparam SIMD_CAPTURE_B0 = 6'd13;
+
+localparam SIMD_READ_A1 = 6'd14;
+localparam SIMD_CAPTURE_A1 = 6'd15;
+localparam SIMD_READ_B1 = 6'd16;
+localparam SIMD_CAPTURE_B1 = 6'd17;
+
+localparam SIMD_READ_A2 = 6'd18;
+localparam SIMD_CAPTURE_A2 = 6'd19;
+localparam SIMD_READ_B2 = 6'd20;
+localparam SIMD_CAPTURE_B2 = 6'd21;
+
+localparam SIMD_READ_A3 = 6'd22;
+localparam SIMD_CAPTURE_A3 = 6'd23;
+localparam SIMD_READ_B3 = 6'd24;
+localparam SIMD_CAPTURE_B3 = 6'd25;
+
+localparam SIMD_EXECUTE = 6'd26;
+localparam SIMD_WRITE_BACK = 6'd27;
+
 always @(posedge clk or posedge reset)
 begin
     if (reset)
     begin
         state <= IDLE;
+
         operand_a <= 32'b0;
         operand_b <= 32'b0;
+
+        simd_a0 <= 32'b0;
+        simd_b0 <= 32'b0;
+        simd_a1 <= 32'b0;
+        simd_b1 <= 32'b0;
+        simd_a2 <= 32'b0;
+        simd_b2 <= 32'b0;
+        simd_a3 <= 32'b0;
+        simd_b3 <= 32'b0;
+
         result <= 32'b0;
         write_data <= 32'b0;
         done <= 1'b0;
@@ -116,48 +179,75 @@ begin
         register_write_addr <= 4'b0;
         register_read_addr <= 4'b0;
         register_write_data <= 32'b0;
+
+        simd_mac_enable <= 1'b0;
     end
     else
     begin
         done <= 1'b0;
         register_write_enable <= 1'b0;
         register_read_enable <= 1'b0;
+        simd_mac_enable <= 1'b0;
 
         case (state)
 
             IDLE:
             begin
-                if (alu_enable)
+                if (simd_enable)
+                begin
+                    register_read_addr <= 4'd0;
+                    register_read_enable <= 1'b1;
+                    state <= SIMD_READ_A0;
+                end
+                else if (alu_enable)
                 begin
                     register_read_addr <= rs1;
                     register_read_enable <= 1'b1;
-                    state <= READ_RS1;
+                    state <= ALU_READ_RS1;
                 end
             end
 
-            READ_RS1:
+            ALU_READ_RS1:
+            begin
+                state <= ALU_CAPTURE_RS1;
+            end
+
+            ALU_CAPTURE_RS1:
             begin
                 operand_a <= register_read_data;
 
-                register_read_addr <= rs2;
-                register_read_enable <= 1'b1;
-
-                state <= READ_RS2;
+                if (alu_src)
+                begin
+                    register_read_enable <= 1'b0;
+                    state <= ALU_EXECUTE;
+                end
+                else
+                begin
+                    register_read_addr <= rs2;
+                    register_read_enable <= 1'b1;
+                    state <= ALU_READ_RS2;
+                end
             end
 
-            READ_RS2:
+            ALU_READ_RS2:
+            begin
+                state <= ALU_CAPTURE_RS2;
+            end
+
+            ALU_CAPTURE_RS2:
             begin
                 operand_b <= register_read_data;
-                state <= EXECUTE;
+                register_read_enable <= 1'b0;
+                state <= ALU_EXECUTE;
             end
 
-            EXECUTE:
+            ALU_EXECUTE:
             begin
                 result <= alu_result;
-                state <= WRITE_BACK;
+                state <= ALU_WRITE_BACK;
             end
 
-            WRITE_BACK:
+            ALU_WRITE_BACK:
             begin
                 if (reg_write)
                 begin
@@ -168,7 +258,130 @@ begin
 
                 write_data <= result;
                 done <= 1'b1;
+                state <= IDLE;
+            end
 
+            SIMD_READ_A0:
+            begin
+                state <= SIMD_CAPTURE_A0;
+            end
+
+            SIMD_CAPTURE_A0:
+            begin
+                simd_a0 <= register_read_data;
+                register_read_addr <= 4'd1;
+                register_read_enable <= 1'b1;
+                state <= SIMD_READ_B0;
+            end
+
+            SIMD_READ_B0:
+            begin
+                state <= SIMD_CAPTURE_B0;
+            end
+
+            SIMD_CAPTURE_B0:
+            begin
+                simd_b0 <= register_read_data;
+                register_read_addr <= 4'd2;
+                register_read_enable <= 1'b1;
+                state <= SIMD_READ_A1;
+            end
+
+            SIMD_READ_A1:
+            begin
+                state <= SIMD_CAPTURE_A1;
+            end
+
+            SIMD_CAPTURE_A1:
+            begin
+                simd_a1 <= register_read_data;
+                register_read_addr <= 4'd3;
+                register_read_enable <= 1'b1;
+                state <= SIMD_READ_B1;
+            end
+
+            SIMD_READ_B1:
+            begin
+                state <= SIMD_CAPTURE_B1;
+            end
+
+            SIMD_CAPTURE_B1:
+            begin
+                simd_b1 <= register_read_data;
+                register_read_addr <= 4'd4;
+                register_read_enable <= 1'b1;
+                state <= SIMD_READ_A2;
+            end
+
+            SIMD_READ_A2:
+            begin
+                state <= SIMD_CAPTURE_A2;
+            end
+
+            SIMD_CAPTURE_A2:
+            begin
+                simd_a2 <= register_read_data;
+                register_read_addr <= 4'd5;
+                register_read_enable <= 1'b1;
+                state <= SIMD_READ_B2;
+            end
+
+            SIMD_READ_B2:
+            begin
+                state <= SIMD_CAPTURE_B2;
+            end
+
+            SIMD_CAPTURE_B2:
+            begin
+                simd_b2 <= register_read_data;
+                register_read_addr <= 4'd6;
+                register_read_enable <= 1'b1;
+                state <= SIMD_READ_A3;
+            end
+
+            SIMD_READ_A3:
+            begin
+                state <= SIMD_CAPTURE_A3;
+            end
+
+            SIMD_CAPTURE_A3:
+            begin
+                simd_a3 <= register_read_data;
+                register_read_addr <= 4'd7;
+                register_read_enable <= 1'b1;
+                state <= SIMD_READ_B3;
+            end
+
+            SIMD_READ_B3:
+            begin
+                state <= SIMD_CAPTURE_B3;
+            end
+
+            SIMD_CAPTURE_B3:
+            begin
+                simd_b3 <= register_read_data;
+                register_read_enable <= 1'b0;
+                state <= SIMD_EXECUTE;
+            end
+
+            SIMD_EXECUTE:
+            begin
+                simd_mac_enable <= 1'b1;
+                state <= SIMD_WRITE_BACK;
+            end
+
+            SIMD_WRITE_BACK:
+            begin
+                if (reg_write)
+                begin
+                    register_write_enable <= 1'b1;
+                    register_write_addr <= rd;
+                    register_write_data <= simd_result[31:0];
+                end
+
+                result <= simd_result[31:0];
+                write_data <= simd_result[31:0];
+                done <= 1'b1;
                 state <= IDLE;
             end
 
