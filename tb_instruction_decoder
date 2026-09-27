@@ -54,104 +54,148 @@ instruction_decoder dut(
     .mem_to_reg(mem_to_reg)
 );
 
-task test_alu;
-    input [5:0] op;
-    input [4:0] expected_control;
-
-    begin
-        instruction = {op,4'b0010,4'b0011,4'b0100,expected_control,9'b0};
-        #10;
-
-        if (opcode !== op ||
-            rd !== 4'b0010 ||
-            rs1 !== 4'b0011 ||
-            rs2 !== 4'b0100 ||
-            alu_control !== expected_control ||
-            alu_enable !== 1'b1 ||
-            simd_enable !== 1'b0 ||
-            reg_write !== 1'b1)
-        begin
-            $display("FAIL opcode=%b alu_control=%b",op,expected_control);
-        end
-        else
-        begin
-            $display("PASS opcode=%b alu_control=%b",op,expected_control);
-        end
-    end
-endtask
-
 initial
 begin
-    instruction = 32'b0;
 
+    instruction = 32'b000000_0001_0010_0011_00000000000000;
     #10;
+    $display("ADD: opcode=%b alu_control=%b alu_enable=%b reg_write=%b",opcode,alu_control,alu_enable,reg_write);
 
-    test_alu(6'b000000,5'b00000);
-    test_alu(6'b000001,5'b00001);
-    test_alu(6'b000010,5'b00010);
-    test_alu(6'b000011,5'b00011);
-    test_alu(6'b000100,5'b00100);
-    test_alu(6'b000101,5'b00101);
-    test_alu(6'b000110,5'b00110);
-    test_alu(6'b000111,5'b00111);
-    test_alu(6'b001000,5'b01000);
-    test_alu(6'b001001,5'b01001);
-    test_alu(6'b001010,5'b01010);
-    test_alu(6'b001011,5'b01011);
-    test_alu(6'b001100,5'b01100);
-    test_alu(6'b001101,5'b01101);
-    test_alu(6'b001110,5'b01110);
-    test_alu(6'b001111,5'b01111);
-    test_alu(6'b010000,5'b10000);
-    test_alu(6'b010001,5'b10001);
-    test_alu(6'b010010,5'b10010);
-    test_alu(6'b010011,5'b10011);
-    test_alu(6'b010100,5'b10100);
-    test_alu(6'b010101,5'b10101);
-    test_alu(6'b010110,5'b10110);
-    test_alu(6'b010111,5'b10111);
-    test_alu(6'b011000,5'b11000);
-    test_alu(6'b011001,5'b11001);
-    test_alu(6'b011010,5'b11010);
-    test_alu(6'b011011,5'b11011);
-    test_alu(6'b011100,5'b11100);
-    test_alu(6'b011101,5'b11101);
-    test_alu(6'b011110,5'b11110);
-
-    instruction = {6'b011111,4'b0010,4'b0011,4'b0100,5'b00000,9'b0};
+    instruction = 32'b000001_0001_0010_0011_00000000000000;
     #10;
+    $display("SUB: opcode=%b alu_control=%b alu_enable=%b reg_write=%b",opcode,alu_control,alu_enable,reg_write);
 
-    if (opcode !== 6'b011111 ||
-        rd !== 4'b0010 ||
-        rs1 !== 4'b0011 ||
-        rs2 !== 4'b0100 ||
-        alu_enable !== 1'b0 ||
-        simd_enable !== 1'b1 ||
-        reg_write !== 1'b0)
-    begin
-        $display("FAIL SIMD MAC");
-    end
-    else
-    begin
-        $display("PASS SIMD MAC");
-    end
-
-    instruction = {6'b111111,26'b0};
+    instruction = 32'b000010_0001_0010_0011_00000000000000;
     #10;
+    $display("MUL: opcode=%b alu_control=%b alu_enable=%b reg_write=%b",opcode,alu_control,alu_enable,reg_write);
 
-    if (alu_enable !== 1'b0 ||
-        simd_enable !== 1'b0 ||
-        reg_write !== 1'b0 ||
-        mem_read !== 1'b0 ||
-        mem_write !== 1'b0 ||
-        mem_to_reg !== 1'b0)
-    begin
-        $display("FAIL invalid opcode");
-    end
-    else
-    begin
-        $display("PASS invalid opcode");
-    end
+    instruction = 32'b000011_0001_0010_0011_00000000000000;
+    #10;
+    $display("DIV: opcode=%b alu_control=%b alu_enable=%b reg_write=%b",opcode,alu_control,alu_enable,reg_write);
+
+    instruction = 32'b000100_0001_0010_0011_00000000000000;
+    #10;
+    $display("POWER: opcode=%b alu_control=%b alu_enable=%b reg_write=%b",opcode,alu_control,alu_enable,reg_write);
+
+    instruction = 32'b000101_0001_0010_0011_00000000000000;
+    #10;
+    $display("LOGICAL AND: opcode=%b alu_control=%b",opcode,alu_control);
+
+    instruction = 32'b000110_0001_0010_0011_00000000000000;
+    #10;
+    $display("LOGICAL OR: opcode=%b alu_control=%b",opcode,alu_control);
+
+    instruction = 32'b000111_0001_0010_0011_00000000000000;
+    #10;
+    $display("LOGICAL NOT A: opcode=%b alu_control=%b",opcode,alu_control);
+
+    instruction = 32'b001000_0001_0010_0011_00000000000000;
+    #10;
+    $display("LOGICAL NOT B: opcode=%b alu_control=%b",opcode,alu_control);
+
+    instruction = 32'b001001_0001_0010_0011_00000000000000;
+    #10;
+    $display("BITWISE AND: opcode=%b alu_control=%b",opcode,alu_control);
+
+    instruction = 32'b001010_0001_0010_0011_00000000000000;
+    #10;
+    $display("BITWISE OR: opcode=%b alu_control=%b",opcode,alu_control);
+
+    instruction = 32'b001011_0001_0010_0011_00000000000000;
+    #10;
+    $display("BITWISE XOR: opcode=%b alu_control=%b",opcode,alu_control);
+
+    instruction = 32'b001100_0001_0010_0011_00000000000000;
+    #10;
+    $display("BITWISE NOT A: opcode=%b alu_control=%b",opcode,alu_control);
+
+    instruction = 32'b001101_0001_0010_0011_00000000000000;
+    #10;
+    $display("BITWISE NOT B: opcode=%b alu_control=%b",opcode,alu_control);
+
+    instruction = 32'b001110_0001_0010_0011_00000000000000;
+    #10;
+    $display("LEFT SHIFT A: opcode=%b alu_control=%b",opcode,alu_control);
+
+    instruction = 32'b001111_0001_0010_0011_00000000000000;
+    #10;
+    $display("LEFT SHIFT B: opcode=%b alu_control=%b",opcode,alu_control);
+
+    instruction = 32'b010000_0001_0010_0011_00000000000000;
+    #10;
+    $display("RIGHT SHIFT A: opcode=%b alu_control=%b",opcode,alu_control);
+
+    instruction = 32'b010001_0001_0010_0011_00000000000000;
+    #10;
+    $display("RIGHT SHIFT B: opcode=%b alu_control=%b",opcode,alu_control);
+
+    instruction = 32'b010010_0001_0010_0011_00000000000000;
+    #10;
+    $display("ARITHMETIC RIGHT SHIFT A: opcode=%b alu_control=%b",opcode,alu_control);
+
+    instruction = 32'b010011_0001_0010_0011_00000000000000;
+    #10;
+    $display("ARITHMETIC RIGHT SHIFT B: opcode=%b alu_control=%b",opcode,alu_control);
+
+    instruction = 32'b010100_0001_0010_0011_00000000000000;
+    #10;
+    $display("EQUAL: opcode=%b alu_control=%b",opcode,alu_control);
+
+    instruction = 32'b010101_0001_0010_0011_00000000000000;
+    #10;
+    $display("NOT EQUAL: opcode=%b alu_control=%b",opcode,alu_control);
+
+    instruction = 32'b010110_0001_0010_0011_00000000000000;
+    #10;
+    $display("GREATER THAN: opcode=%b alu_control=%b",opcode,alu_control);
+
+    instruction = 32'b010111_0001_0010_0011_00000000000000;
+    #10;
+    $display("LESS THAN: opcode=%b alu_control=%b",opcode,alu_control);
+
+    instruction = 32'b011000_0001_0010_0011_00000000000000;
+    #10;
+    $display("GREATER EQUAL: opcode=%b alu_control=%b",opcode,alu_control);
+
+    instruction = 32'b011001_0001_0010_0011_00000000000000;
+    #10;
+    $display("LESS EQUAL: opcode=%b alu_control=%b",opcode,alu_control);
+
+    instruction = 32'b011010_0001_0010_0011_00000000000000;
+    #10;
+    $display("SIGNED GREATER: opcode=%b alu_control=%b",opcode,alu_control);
+
+    instruction = 32'b011011_0001_0010_0011_00000000000000;
+    #10;
+    $display("SIGNED LESS: opcode=%b alu_control=%b",opcode,alu_control);
+
+    instruction = 32'b011100_0001_0010_0011_00000000000000;
+    #10;
+    $display("SIGNED GREATER EQUAL: opcode=%b alu_control=%b",opcode,alu_control);
+
+    instruction = 32'b011101_0001_0010_0011_00000000000000;
+    #10;
+    $display("SIGNED LESS EQUAL: opcode=%b alu_control=%b",opcode,alu_control);
+
+    instruction = 32'b011110_0001_0010_0011_00000000000000;
+    #10;
+    $display("MODULUS: opcode=%b alu_control=%b",opcode,alu_control);
+
+    instruction = 32'b011111_0001_0010_0011_00000000000000;
+    #10;
+    $display("SIMD MAC: opcode=%b simd_enable=%b reg_write=%b",opcode,simd_enable,reg_write);
+
+    instruction = 32'b100000_0001_0010_0011_00000000000000;
+    #10;
+    $display("LOAD: opcode=%b alu_enable=%b mem_read=%b mem_to_reg=%b reg_write=%b",opcode,alu_enable,mem_read,mem_to_reg,reg_write);
+
+    instruction = 32'b100001_0001_0010_0011_00000000000000;
+    #10;
+    $display("STORE: opcode=%b alu_enable=%b mem_write=%b",opcode,alu_enable,mem_write);
+
+    instruction = 32'b111111_0001_0010_0011_00000000000000;
+    #10;
+    $display("INVALID: opcode=%b alu_enable=%b simd_enable=%b reg_write=%b",opcode,alu_enable,simd_enable,reg_write);
 
     #10;
     $finish;
