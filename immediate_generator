@@ -1,0 +1,30 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 27.09.2026 11:55:08
+// Design Name: 
+// Module Name: immediate_generator
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+`timescale 1ns / 1ps
+
+module immediate_generator(
+    input [31:0] instruction,
+    output [31:0] immediate
+);
+
+assign immediate = {{18{instruction[13]}},instruction[13:0]};
+
+endmodule
