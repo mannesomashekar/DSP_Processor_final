@@ -1,0 +1,106 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 27.09.2026 19:28:34
+// Design Name: 
+// Module Name: tb_dsp_processor
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+`timescale 1ns / 1ps
+
+module tb_dsp_processor;
+
+reg clk;
+reg reset;
+integer i;
+
+dsp_processor dut(
+    .clk(clk),
+    .reset(reset)
+);
+
+always #5 clk = ~clk;
+
+initial
+begin
+    clk = 1'b0;
+    reset = 1'b1;
+
+    for (i = 0; i < 256; i = i + 1)
+        dut.instruction_mem.memory[i] =
+        32'b111111_000000000000000000000000;
+
+    // SIMD MAC -> R8
+    dut.instruction_mem.memory[0] =
+        32'b011111_1000_0000_0000_00000000000000;
+
+    #20;
+
+    reset = 1'b0;
+
+    // SIMD operands
+    dut.data_path.register_file.registers[0] = 32'd2;
+    dut.data_path.register_file.registers[1] = 32'd3;
+    dut.data_path.register_file.registers[2] = 32'd4;
+    dut.data_path.register_file.registers[3] = 32'd5;
+    dut.data_path.register_file.registers[4] = 32'd6;
+    dut.data_path.register_file.registers[5] = 32'd7;
+    dut.data_path.register_file.registers[6] = 32'd8;
+    dut.data_path.register_file.registers[7] = 32'd9;
+
+    #300;
+
+    $display("");
+    $display("======================================");
+    $display("          SIMD PROCESSOR TEST");
+    $display("======================================");
+
+    $display("R0 = %h",dut.data_path.register_file.registers[0]);
+    $display("R1 = %h",dut.data_path.register_file.registers[1]);
+    $display("R2 = %h",dut.data_path.register_file.registers[2]);
+    $display("R3 = %h",dut.data_path.register_file.registers[3]);
+    $display("R4 = %h",dut.data_path.register_file.registers[4]);
+    $display("R5 = %h",dut.data_path.register_file.registers[5]);
+    $display("R6 = %h",dut.data_path.register_file.registers[6]);
+    $display("R7 = %h",dut.data_path.register_file.registers[7]);
+
+    $display("R8 = %h",dut.data_path.register_file.registers[8]);
+
+    $display("A0 = %h",dut.data_path.simd_a0);
+    $display("B0 = %h",dut.data_path.simd_b0);
+    $display("A1 = %h",dut.data_path.simd_a1);
+    $display("B1 = %h",dut.data_path.simd_b1);
+    $display("A2 = %h",dut.data_path.simd_a2);
+    $display("B2 = %h",dut.data_path.simd_b2);
+    $display("A3 = %h",dut.data_path.simd_a3);
+    $display("B3 = %h",dut.data_path.simd_b3);
+
+    $display("SIMD RESULT = %h",dut.data_path.simd_result);
+    $display("PC = %d",dut.pc);
+    $display("STATE = %d",dut.data_path.state);
+
+    $display("");
+
+    if (dut.data_path.register_file.registers[8] == 32'd140)
+        $display("SIMD MAC PASS");
+    else
+        $display("SIMD MAC FAIL");
+
+    $display("======================================");
+
+    $finish;
+end
+
+endmodule
