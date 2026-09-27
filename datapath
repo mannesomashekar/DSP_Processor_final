@@ -1,0 +1,183 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 27.09.2026 16:25:38
+// Design Name: 
+// Module Name: datapath
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+`timescale 1ns / 1ps
+
+module datapath(
+    input clk,
+    input reset,
+    input [31:0] instruction,
+
+    input alu_enable,
+    input simd_enable,
+    input reg_write,
+    input alu_src,
+    input mem_read,
+    input mem_write,
+    input mem_to_reg,
+    input [4:0] alu_control,
+
+    output reg [31:0] result,
+    output reg [31:0] write_data,
+    output reg done
+);
+
+wire [5:0] opcode;
+wire [3:0] rd;
+wire [3:0] rs1;
+wire [3:0] rs2;
+
+assign opcode = instruction[31:26];
+assign rd = instruction[25:22];
+assign rs1 = instruction[21:18];
+assign rs2 = instruction[17:14];
+
+wire [31:0] immediate;
+
+immediate_generator imm_gen(
+    .instruction(instruction),
+    .immediate(immediate)
+);
+
+reg register_write_enable;
+reg register_read_enable;
+reg [3:0] register_write_addr;
+reg [3:0] register_read_addr;
+reg [31:0] register_write_data;
+wire [31:0] register_read_data;
+
+register_file_16x32 register_file(
+    .clk(clk),
+    .reset(reset),
+    .write_enable(register_write_enable),
+    .read_enable(register_read_enable),
+    .write_addr(register_write_addr),
+    .read_addr(register_read_addr),
+    .d(register_write_data),
+    .q(register_read_data)
+);
+
+reg [31:0] operand_a;
+reg [31:0] operand_b;
+
+reg [2:0] state;
+
+localparam IDLE = 3'b000;
+localparam READ_RS1 = 3'b001;
+localparam READ_RS2 = 3'b010;
+localparam EXECUTE = 3'b011;
+localparam WRITE_BACK = 3'b100;
+
+wire [31:0] alu_b;
+
+assign alu_b = alu_src ? immediate : operand_b;
+
+wire [31:0] alu_result;
+wire alu_zero;
+
+alu_32 alu(
+    .a(operand_a),
+    .b(alu_b),
+    .alu_control(alu_control),
+    .result(alu_result),
+    .zero(alu_zero)
+);
+
+always @(posedge clk or posedge reset)
+begin
+    if (reset)
+    begin
+        state <= IDLE;
+        operand_a <= 32'b0;
+        operand_b <= 32'b0;
+        result <= 32'b0;
+        write_data <= 32'b0;
+        done <= 1'b0;
+
+        register_write_enable <= 1'b0;
+        register_read_enable <= 1'b0;
+        register_write_addr <= 4'b0;
+        register_read_addr <= 4'b0;
+        register_write_data <= 32'b0;
+    end
+    else
+    begin
+        done <= 1'b0;
+        register_write_enable <= 1'b0;
+        register_read_enable <= 1'b0;
+
+        case (state)
+
+            IDLE:
+            begin
+                if (alu_enable)
+                begin
+                    register_read_addr <= rs1;
+                    register_read_enable <= 1'b1;
+                    state <= READ_RS1;
+                end
+            end
+
+            READ_RS1:
+            begin
+                operand_a <= register_read_data;
+
+                register_read_addr <= rs2;
+                register_read_enable <= 1'b1;
+
+                state <= READ_RS2;
+            end
+
+            READ_RS2:
+            begin
+                operand_b <= register_read_data;
+                state <= EXECUTE;
+            end
+
+            EXECUTE:
+            begin
+                result <= alu_result;
+                state <= WRITE_BACK;
+            end
+
+            WRITE_BACK:
+            begin
+                if (reg_write)
+                begin
+                    register_write_enable <= 1'b1;
+                    register_write_addr <= rd;
+                    register_write_data <= result;
+                end
+
+                write_data <= result;
+                done <= 1'b1;
+
+                state <= IDLE;
+            end
+
+            default:
+            begin
+                state <= IDLE;
+            end
+
+        endcase
+    end
+end
+endmodule
