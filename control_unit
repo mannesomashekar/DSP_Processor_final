@@ -1,0 +1,77 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 27.09.2026 11:05:44
+// Design Name: 
+// Module Name: control_unit
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+`timescale 1ns / 1ps
+
+module control_unit(
+    input alu_enable,
+    input simd_enable,
+    input reg_write,
+    input alu_src,
+    input mem_read,
+    input mem_write,
+    input mem_to_reg,
+
+    output reg alu_select,
+    output reg simd_select,
+    output reg register_write,
+    output reg immediate_select,
+    output reg memory_read,
+    output reg memory_write,
+    output reg writeback_select
+);
+
+always @(*)
+begin
+    alu_select = 1'b0;
+    simd_select = 1'b0;
+    register_write = 1'b0;
+    immediate_select = 1'b0;
+    memory_read = 1'b0;
+    memory_write = 1'b0;
+    writeback_select = 1'b0;
+
+    if (alu_enable)
+    begin
+        alu_select = 1'b1;
+        register_write = reg_write;
+        immediate_select = alu_src;
+    end
+
+    if (simd_enable)
+    begin
+        simd_select = 1'b1;
+        register_write = reg_write;
+    end
+
+    if (mem_read)
+    begin
+        memory_read = 1'b1;
+        writeback_select = mem_to_reg;
+        register_write = reg_write;
+    end
+
+    if (mem_write)
+    begin
+        memory_write = 1'b1;
+        immediate_select = alu_src;
+    end
+end
+endmodule
