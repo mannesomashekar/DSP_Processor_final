@@ -1,24 +1,4 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 27.09.2026 16:27:02
-// Design Name: 
-// Module Name: tb_datapath
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
-`timescale 1ns / 1ps
 
 module tb_datapath;
 
@@ -77,85 +57,43 @@ begin
 
     reset = 1'b0;
 
-    // initialize registers for simulation
-    dut.register_file.registers[2] = 32'd20;
-    dut.register_file.registers[3] = 32'd10;
+    // initialize registers
+    dut.register_file.registers[0] = 32'd2;
+    dut.register_file.registers[1] = 32'd3;
+    dut.register_file.registers[2] = 32'd4;
+    dut.register_file.registers[3] = 32'd5;
+    dut.register_file.registers[4] = 32'd6;
+    dut.register_file.registers[5] = 32'd7;
+    dut.register_file.registers[6] = 32'd8;
+    dut.register_file.registers[7] = 32'd9;
 
-    // add r1,r2,r3
-    instruction = 32'b000000_0001_0010_0011_00000000000000;
+    // SIMD instruction
+    instruction = 32'b011111_1000_0000_0000_00000000000000;
 
-    alu_enable = 1'b1;
+    alu_enable = 1'b0;
+    simd_enable = 1'b1;
     reg_write = 1'b1;
-    alu_src = 1'b0;
-    alu_control = 5'b00000;
 
-    #60;
+    #200;
 
-    $display("ADD TEST");
-    $display("r2 = %d",dut.register_file.registers[2]);
-    $display("r3 = %d",dut.register_file.registers[3]);
-    $display("r1 = %d",dut.register_file.registers[1]);
+    $display("SIMD MAC TEST");
+    $display("R0 = %d",dut.register_file.registers[0]);
+    $display("R1 = %d",dut.register_file.registers[1]);
+    $display("R2 = %d",dut.register_file.registers[2]);
+    $display("R3 = %d",dut.register_file.registers[3]);
+    $display("R4 = %d",dut.register_file.registers[4]);
+    $display("R5 = %d",dut.register_file.registers[5]);
+    $display("R6 = %d",dut.register_file.registers[6]);
+    $display("R7 = %d",dut.register_file.registers[7]);
+    $display("R8 = %d",dut.register_file.registers[8]);
     $display("result = %d",result);
+    $display("write_data = %d",write_data);
     $display("done = %b",done);
 
-    if (dut.register_file.registers[1] == 32'd30)
-        $display("ADD PASS");
+    if (dut.register_file.registers[8] == 32'd140)
+        $display("SIMD MAC PASS");
     else
-        $display("ADD FAIL");
-
-    #10;
-
-    // change register values
-    dut.register_file.registers[2] = 32'd50;
-    dut.register_file.registers[3] = 32'd20;
-
-    // sub r4,r2,r3
-    instruction = 32'b000001_0100_0010_0011_00000000000000;
-
-    alu_enable = 1'b1;
-    reg_write = 1'b1;
-    alu_src = 1'b0;
-    alu_control = 5'b00001;
-
-    #60;
-
-    $display("SUB TEST");
-    $display("r2 = %d",dut.register_file.registers[2]);
-    $display("r3 = %d",dut.register_file.registers[3]);
-    $display("r4 = %d",dut.register_file.registers[4]);
-    $display("result = %d",result);
-    $display("done = %b",done);
-
-    if (dut.register_file.registers[4] == 32'd30)
-        $display("SUB PASS");
-    else
-        $display("SUB FAIL");
-
-    #10;
-
-    // change register values
-    dut.register_file.registers[2] = 32'd100;
-    dut.register_file.registers[3] = 32'd25;
-
-    // and r5,r2,r3
-    instruction = 32'b001001_0101_0010_0011_00000000000000;
-
-    alu_enable = 1'b1;
-    reg_write = 1'b1;
-    alu_src = 1'b0;
-    alu_control = 5'b01001;
-
-    #60;
-
-    $display("BITWISE AND TEST");
-    $display("r5 = %h",dut.register_file.registers[5]);
-    $display("result = %h",result);
-    $display("done = %b",done);
-
-    if (dut.register_file.registers[5] == (32'd100 & 32'd25))
-        $display("BITWISE AND PASS");
-    else
-        $display("BITWISE AND FAIL");
+        $display("SIMD MAC FAIL");
 
     #10;
 
