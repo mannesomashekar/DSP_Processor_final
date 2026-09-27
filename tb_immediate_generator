@@ -1,0 +1,62 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 27.09.2026 11:56:10
+// Design Name: 
+// Module Name: tb_immediate_generator
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+`timescale 1ns / 1ps
+
+module tb_immediate_generator;
+
+reg [31:0] instruction;
+
+wire [31:0] immediate;
+
+immediate_generator dut(
+    .instruction(instruction),
+    .immediate(immediate)
+);
+
+initial
+begin
+
+    instruction = 32'b000000_0001_0010_0011_00000000010100;
+    #10;
+
+    $display("test 1");
+    $display("instruction = %b",instruction);
+    $display("immediate = %b",immediate);
+
+    instruction = 32'b100000_0001_0010_0011_00000000010100;
+    #10;
+
+    $display("test 2 load");
+    $display("instruction = %b",instruction);
+    $display("immediate = %b",immediate);
+
+    instruction = 32'b100001_0001_0010_0011_11111111111011;
+    #10;
+
+    $display("test 3 store negative");
+    $display("instruction = %b",instruction);
+    $display("immediate = %b",immediate);
+
+    #10;
+
+    $finish;
+end
+endmodule
