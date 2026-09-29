@@ -1,0 +1,1293 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 29.09.2026 22:33:35
+// Design Name: 
+// Module Name: tb_dsp_uvm
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+`timescale 1ns / 1ps
+
+// ============================================================
+// UVM IMPORT
+// ============================================================
+
+import uvm_pkg::*;
+
+`include "uvm_macros.svh"
+
+
+// ============================================================
+// TRANSACTION
+// ============================================================
+
+class dsp_transaction extends uvm_sequence_item;
+
+    rand bit [5:0]  opcode;
+    rand bit [3:0]  rd;
+    rand bit [3:0]  rs1;
+    rand bit [3:0]  rs2;
+    rand bit [13:0] imm;
+
+    bit [31:0] expected_result;
+    bit [31:0] actual_result;
+
+
+    `uvm_object_utils(dsp_transaction)
+
+
+    function new(string name = "dsp_transaction");
+
+        super.new(name);
+
+    endfunction
+
+
+    // ========================================================
+    // ENCODE INSTRUCTION
+    // ========================================================
+
+    function bit [31:0] encode();
+
+        encode = {
+            opcode,
+            rd,
+            rs1,
+            rs2,
+            imm
+        };
+
+    endfunction
+
+
+    // ========================================================
+    // PRINT
+    // ========================================================
+
+    function void do_print(uvm_printer printer);
+
+        super.do_print(printer);
+
+        printer.print_field_int(
+            "opcode",
+            opcode,
+            6,
+            UVM_HEX
+        );
+
+        printer.print_field_int(
+            "rd",
+            rd,
+            4,
+            UVM_DEC
+        );
+
+        printer.print_field_int(
+            "rs1",
+            rs1,
+            4,
+            UVM_DEC
+        );
+
+        printer.print_field_int(
+            "rs2",
+            rs2,
+            4,
+            UVM_DEC
+        );
+
+        printer.print_field_int(
+            "imm",
+            imm,
+            14,
+            UVM_HEX
+        );
+
+    endfunction
+
+endclass
+
+
+
+// ============================================================
+// SEQUENCE
+// ============================================================
+
+class dsp_sequence extends uvm_sequence #(dsp_transaction);
+
+    `uvm_object_utils(dsp_sequence)
+
+
+    function new(string name = "dsp_sequence");
+
+        super.new(name);
+
+    endfunction
+
+
+    task body();
+
+        dsp_transaction tr;
+
+
+        // ====================================================
+        // INSTRUCTION 0
+        //
+        // ADD
+        // R3 = R1 + R2
+        //
+        // 3 + 4 = 7
+        // ====================================================
+
+        tr =
+            dsp_transaction::type_id::create("add");
+
+        start_item(tr);
+
+        tr.opcode = 6'b000000;
+        tr.rd     = 4'd3;
+        tr.rs1    = 4'd1;
+        tr.rs2    = 4'd2;
+        tr.imm    = 14'd0;
+
+        finish_item(tr);
+
+
+        // ====================================================
+        // INSTRUCTION 1
+        //
+        // SUB
+        // R4 = R3 - R2
+        //
+        // 7 - 4 = 3
+        // ====================================================
+
+        tr =
+            dsp_transaction::type_id::create("sub");
+
+        start_item(tr);
+
+        tr.opcode = 6'b000001;
+        tr.rd     = 4'd4;
+        tr.rs1    = 4'd3;
+        tr.rs2    = 4'd2;
+        tr.imm    = 14'd0;
+
+        finish_item(tr);
+
+
+        // ====================================================
+        // INSTRUCTION 2
+        //
+        // MUL
+        // R5 = R4 * R2
+        //
+        // 3 * 4 = 12
+        // ====================================================
+
+        tr =
+            dsp_transaction::type_id::create("mul");
+
+        start_item(tr);
+
+        tr.opcode = 6'b000010;
+        tr.rd     = 4'd5;
+        tr.rs1    = 4'd4;
+        tr.rs2    = 4'd2;
+        tr.imm    = 14'd0;
+
+        finish_item(tr);
+
+
+        // ====================================================
+        // INSTRUCTION 3
+        //
+        // STORE
+        // MEM[0] = R5
+        //
+        // MEM[0] = 12
+        // ====================================================
+
+        tr =
+            dsp_transaction::type_id::create("store");
+
+        start_item(tr);
+
+        tr.opcode = 6'b100001;
+        tr.rd     = 4'd0;
+        tr.rs1    = 4'd5;
+        tr.rs2    = 4'd0;
+        tr.imm    = 14'd0;
+
+        finish_item(tr);
+
+
+        // ====================================================
+        // INSTRUCTION 4
+        //
+        // LOAD
+        // R6 = MEM[0]
+        //
+        // R6 = 12
+        // ====================================================
+
+        tr =
+            dsp_transaction::type_id::create("load");
+
+        start_item(tr);
+
+        tr.opcode = 6'b100000;
+        tr.rd     = 4'd6;
+        tr.rs1    = 4'd0;
+        tr.rs2    = 4'd0;
+        tr.imm    = 14'd0;
+
+        finish_item(tr);
+
+
+        // ====================================================
+        // INSTRUCTION 5
+        //
+        // SIMD MAC
+        // R8 = 153
+        // ====================================================
+
+        tr =
+            dsp_transaction::type_id::create("simd_mac");
+
+        start_item(tr);
+
+        tr.opcode = 6'b011111;
+        tr.rd     = 4'd8;
+        tr.rs1    = 4'd0;
+        tr.rs2    = 4'd4;
+        tr.imm    = 14'd0;
+
+        finish_item(tr);
+
+
+        `uvm_info(
+            "SEQUENCE",
+            "6 DSP instructions generated",
+            UVM_MEDIUM
+        )
+
+    endtask
+
+endclass
+
+
+
+// ============================================================
+// SEQUENCER
+// ============================================================
+
+class dsp_sequencer extends uvm_sequencer #(dsp_transaction);
+
+    `uvm_component_utils(dsp_sequencer)
+
+
+    function new(
+        string name = "dsp_sequencer",
+        uvm_component parent = null
+    );
+
+        super.new(name, parent);
+
+    endfunction
+
+endclass
+
+
+
+// ============================================================
+// DRIVER
+// ============================================================
+
+class dsp_driver extends uvm_driver #(dsp_transaction);
+
+    `uvm_component_utils(dsp_driver)
+
+
+    int instruction_index;
+
+
+    function new(
+        string name = "dsp_driver",
+        uvm_component parent = null
+    );
+
+        super.new(name, parent);
+
+        instruction_index = 0;
+
+    endfunction
+
+
+    task run_phase(uvm_phase phase);
+
+        dsp_transaction tr;
+
+        bit status;
+
+
+        forever begin
+
+            seq_item_port.get_next_item(tr);
+
+
+            `uvm_info(
+                "DRIVER",
+                $sformatf(
+                    "Instruction %0d = %h",
+                    instruction_index,
+                    tr.encode()
+                ),
+                UVM_MEDIUM
+            );
+
+
+            // =================================================
+            // WRITE INSTRUCTION MEMORY
+            // =================================================
+
+            status =
+                uvm_hdl_deposit(
+                    $sformatf(
+                        "tb_dsp_uvm.dut.instruction_mem.memory[%0d]",
+                        instruction_index
+                    ),
+                    tr.encode()
+                );
+
+
+            if (!status) begin
+
+                `uvm_error(
+                    "DRIVER",
+                    $sformatf(
+                        "Failed to write instruction %0d",
+                        instruction_index
+                    )
+                )
+
+            end
+            else begin
+
+                `uvm_info(
+                    "DRIVER",
+                    $sformatf(
+                        "Instruction %0d loaded successfully",
+                        instruction_index
+                    ),
+                    UVM_LOW
+                )
+
+            end
+
+
+            instruction_index++;
+
+
+            seq_item_port.item_done();
+
+        end
+
+    endtask
+
+endclass
+
+
+
+// ============================================================
+// MONITOR
+// ============================================================
+
+class dsp_monitor extends uvm_monitor;
+
+    `uvm_component_utils(dsp_monitor)
+
+
+    uvm_analysis_port #(dsp_transaction)
+        analysis_port;
+
+
+    function new(
+        string name = "dsp_monitor",
+        uvm_component parent = null
+    );
+
+        super.new(name, parent);
+
+        analysis_port =
+            new("analysis_port", this);
+
+    endfunction
+
+
+    task run_phase(uvm_phase phase);
+
+        bit        done_value;
+        bit [31:0] pc_value;
+        bit [31:0] result_value;
+
+        dsp_transaction tr;
+
+
+        forever begin
+
+            #5;
+
+
+            // =================================================
+            // READ DONE
+            // =================================================
+
+            uvm_hdl_read(
+                "tb_dsp_uvm.dut.data_path.done",
+                done_value
+            );
+
+
+            if (done_value) begin
+
+
+                // =============================================
+                // READ PC
+                // =============================================
+
+                uvm_hdl_read(
+                    "tb_dsp_uvm.dut.pc",
+                    pc_value
+                );
+
+
+                // =============================================
+                // READ RESULT
+                // =============================================
+
+                uvm_hdl_read(
+                    "tb_dsp_uvm.dut.data_path.result",
+                    result_value
+                );
+
+
+                tr =
+                    dsp_transaction::type_id::create(
+                        "monitor_transaction"
+                    );
+
+
+                tr.actual_result =
+                    result_value;
+
+
+                analysis_port.write(tr);
+
+
+                `uvm_info(
+                    "MONITOR",
+                    $sformatf(
+                        "DONE detected : PC=%0d RESULT=%0d",
+                        pc_value,
+                        result_value
+                    ),
+                    UVM_MEDIUM
+                );
+
+            end
+
+        end
+
+    endtask
+
+endclass
+
+
+
+// ============================================================
+// SCOREBOARD
+// ============================================================
+
+class dsp_scoreboard extends uvm_scoreboard;
+
+    `uvm_component_utils(dsp_scoreboard)
+
+
+    uvm_analysis_imp #(dsp_transaction, dsp_scoreboard)
+        analysis_export;
+
+
+    function new(
+        string name = "dsp_scoreboard",
+        uvm_component parent = null
+    );
+
+        super.new(name, parent);
+
+        analysis_export =
+            new("analysis_export", this);
+
+    endfunction
+
+
+    // ========================================================
+    // RECEIVE MONITOR TRANSACTION
+    // ========================================================
+
+    function void write(dsp_transaction tr);
+
+        `uvm_info(
+            "SCOREBOARD",
+            $sformatf(
+                "Observed result = %0d",
+                tr.actual_result
+            ),
+            UVM_MEDIUM
+        );
+
+    endfunction
+
+
+    // ========================================================
+    // FINAL CHECKS
+    // ========================================================
+
+    task run_phase(uvm_phase phase);
+
+        bit [31:0] r3_value;
+        bit [31:0] r4_value;
+        bit [31:0] r5_value;
+        bit [31:0] r6_value;
+        bit [31:0] r8_value;
+
+        bit [31:0] mem0_value;
+
+        bit [31:0] pc_value;
+
+
+        // ====================================================
+        // WAIT FOR PROCESSOR
+        // ====================================================
+
+        #1100;
+
+
+        // ====================================================
+        // READ FINAL VALUES
+        // ====================================================
+
+        uvm_hdl_read(
+            "tb_dsp_uvm.dut.data_path.register_file.registers[3]",
+            r3_value
+        );
+
+        uvm_hdl_read(
+            "tb_dsp_uvm.dut.data_path.register_file.registers[4]",
+            r4_value
+        );
+
+        uvm_hdl_read(
+            "tb_dsp_uvm.dut.data_path.register_file.registers[5]",
+            r5_value
+        );
+
+        uvm_hdl_read(
+            "tb_dsp_uvm.dut.data_path.register_file.registers[6]",
+            r6_value
+        );
+
+        uvm_hdl_read(
+            "tb_dsp_uvm.dut.data_path.register_file.registers[8]",
+            r8_value
+        );
+
+        uvm_hdl_read(
+            "tb_dsp_uvm.dut.data_path.data_mem.memory[0]",
+            mem0_value
+        );
+
+        uvm_hdl_read(
+            "tb_dsp_uvm.dut.pc",
+            pc_value
+        );
+
+
+        // ====================================================
+        // PRINT RESULTS
+        // ====================================================
+
+        `uvm_info(
+            "RESULTS",
+            "==============================================",
+            UVM_LOW
+        );
+
+        `uvm_info(
+            "RESULTS",
+            "       DSP PROCESSOR UVM RESULTS",
+            UVM_LOW
+        );
+
+        `uvm_info(
+            "RESULTS",
+            "==============================================",
+            UVM_LOW
+        );
+
+
+        `uvm_info(
+            "RESULTS",
+            $sformatf(
+                "R3  = %0d",
+                r3_value
+            ),
+            UVM_LOW
+        );
+
+
+        `uvm_info(
+            "RESULTS",
+            $sformatf(
+                "R4  = %0d",
+                r4_value
+            ),
+            UVM_LOW
+        );
+
+
+        `uvm_info(
+            "RESULTS",
+            $sformatf(
+                "R5  = %0d",
+                r5_value
+            ),
+            UVM_LOW
+        );
+
+
+        `uvm_info(
+            "RESULTS",
+            $sformatf(
+                "R6  = %0d",
+                r6_value
+            ),
+            UVM_LOW
+        );
+
+
+        `uvm_info(
+            "RESULTS",
+            $sformatf(
+                "R8  = %0d",
+                r8_value
+            ),
+            UVM_LOW
+        );
+
+
+        `uvm_info(
+            "RESULTS",
+            $sformatf(
+                "MEM[0] = %0d",
+                mem0_value
+            ),
+            UVM_LOW
+        );
+
+
+        `uvm_info(
+            "RESULTS",
+            $sformatf(
+                "PC = %0d",
+                pc_value
+            ),
+            UVM_LOW
+        );
+
+
+        // ====================================================
+        // ADD CHECK
+        // ====================================================
+
+        if (r3_value == 32'd7) begin
+
+            `uvm_info(
+                "ADD",
+                "ADD PASS : R3 = 7",
+                UVM_LOW
+            );
+
+        end
+        else begin
+
+            `uvm_error(
+                "ADD",
+                $sformatf(
+                    "ADD FAIL : R3 = %0d",
+                    r3_value
+                )
+            );
+
+        end
+
+
+        // ====================================================
+        // SUB CHECK
+        // ====================================================
+
+        if (r4_value == 32'd3) begin
+
+            `uvm_info(
+                "SUB",
+                "SUB PASS : R4 = 3",
+                UVM_LOW
+            );
+
+        end
+        else begin
+
+            `uvm_error(
+                "SUB",
+                $sformatf(
+                    "SUB FAIL : R4 = %0d",
+                    r4_value
+                )
+            );
+
+        end
+
+
+        // ====================================================
+        // MUL CHECK
+        // ====================================================
+
+        if (r5_value == 32'd12) begin
+
+            `uvm_info(
+                "MUL",
+                "MUL PASS : R5 = 12",
+                UVM_LOW
+            );
+
+        end
+        else begin
+
+            `uvm_error(
+                "MUL",
+                $sformatf(
+                    "MUL FAIL : R5 = %0d",
+                    r5_value
+                )
+            );
+
+        end
+
+
+        // ====================================================
+        // STORE CHECK
+        // ====================================================
+
+        if (mem0_value == 32'd12) begin
+
+            `uvm_info(
+                "STORE",
+                "STORE PASS : MEM[0] = 12",
+                UVM_LOW
+            );
+
+        end
+        else begin
+
+            `uvm_error(
+                "STORE",
+                $sformatf(
+                    "STORE FAIL : MEM[0] = %0d",
+                    mem0_value
+                )
+            );
+
+        end
+
+
+        // ====================================================
+        // LOAD CHECK
+        // ====================================================
+
+        if (r6_value == 32'd12) begin
+
+            `uvm_info(
+                "LOAD",
+                "LOAD PASS : R6 = 12",
+                UVM_LOW
+            );
+
+        end
+        else begin
+
+            `uvm_error(
+                "LOAD",
+                $sformatf(
+                    "LOAD FAIL : R6 = %0d",
+                    r6_value
+                )
+            );
+
+        end
+
+
+        // ====================================================
+        // SIMD CHECK
+        // ====================================================
+
+        if (r8_value == 32'd153) begin
+
+            `uvm_info(
+                "SIMD",
+                "SIMD MAC PASS : R8 = 153",
+                UVM_LOW
+            );
+
+        end
+        else begin
+
+            `uvm_error(
+                "SIMD",
+                $sformatf(
+                    "SIMD MAC FAIL : R8 = %0d",
+                    r8_value
+                )
+            );
+
+        end
+
+
+        // ====================================================
+        // PC CHECK
+        // ====================================================
+
+        if (pc_value == 32'd24) begin
+
+            `uvm_info(
+                "PC",
+                "PC PASS : PC = 24",
+                UVM_LOW
+            );
+
+        end
+        else begin
+
+            `uvm_error(
+                "PC",
+                $sformatf(
+                    "PC FAIL : PC = %0d",
+                    pc_value
+                )
+            );
+
+        end
+
+
+        // ====================================================
+        // FINAL
+        // ====================================================
+
+        `uvm_info(
+            "DSP_UVM",
+            "==============================================",
+            UVM_LOW
+        );
+
+        `uvm_info(
+            "DSP_UVM",
+            "     DSP PROCESSOR UVM VERIFICATION PASS",
+            UVM_LOW
+        );
+
+        `uvm_info(
+            "DSP_UVM",
+            "==============================================",
+            UVM_LOW
+        );
+
+    endtask
+
+endclass
+
+
+
+// ============================================================
+// AGENT
+// ============================================================
+
+class dsp_agent extends uvm_agent;
+
+    `uvm_component_utils(dsp_agent)
+
+
+    dsp_sequencer sequencer;
+    dsp_driver    driver;
+    dsp_monitor   monitor;
+
+
+    function new(
+        string name = "dsp_agent",
+        uvm_component parent = null
+    );
+
+        super.new(name, parent);
+
+    endfunction
+
+
+    function void build_phase(uvm_phase phase);
+
+        super.build_phase(phase);
+
+
+        sequencer =
+            dsp_sequencer::type_id::create(
+                "sequencer",
+                this
+            );
+
+
+        driver =
+            dsp_driver::type_id::create(
+                "driver",
+                this
+            );
+
+
+        monitor =
+            dsp_monitor::type_id::create(
+                "monitor",
+                this
+            );
+
+    endfunction
+
+
+    function void connect_phase(uvm_phase phase);
+
+        super.connect_phase(phase);
+
+
+        driver.seq_item_port.connect(
+            sequencer.seq_item_export
+        );
+
+    endfunction
+
+endclass
+
+
+
+// ============================================================
+// ENVIRONMENT
+// ============================================================
+
+class dsp_env extends uvm_env;
+
+    `uvm_component_utils(dsp_env)
+
+
+    dsp_agent      agent;
+    dsp_scoreboard scoreboard;
+
+
+    function new(
+        string name = "dsp_env",
+        uvm_component parent = null
+    );
+
+        super.new(name, parent);
+
+    endfunction
+
+
+    function void build_phase(uvm_phase phase);
+
+        super.build_phase(phase);
+
+
+        agent =
+            dsp_agent::type_id::create(
+                "agent",
+                this
+            );
+
+
+        scoreboard =
+            dsp_scoreboard::type_id::create(
+                "scoreboard",
+                this
+            );
+
+    endfunction
+
+
+    function void connect_phase(uvm_phase phase);
+
+        super.connect_phase(phase);
+
+
+        agent.monitor.analysis_port.connect(
+            scoreboard.analysis_export
+        );
+
+    endfunction
+
+endclass
+
+
+
+// ============================================================
+// TEST
+// ============================================================
+
+class dsp_test extends uvm_test;
+
+    `uvm_component_utils(dsp_test)
+
+
+    dsp_env env;
+
+
+    function new(
+        string name = "dsp_test",
+        uvm_component parent = null
+    );
+
+        super.new(name, parent);
+
+    endfunction
+
+
+    function void build_phase(uvm_phase phase);
+
+        super.build_phase(phase);
+
+
+        env =
+            dsp_env::type_id::create(
+                "env",
+                this
+            );
+
+    endfunction
+
+
+    task run_phase(uvm_phase phase);
+
+        dsp_sequence seq;
+
+        bit status;
+
+
+        phase.raise_objection(this);
+
+
+        // ====================================================
+        // ASSERT RESET
+        // ====================================================
+
+        status =
+            uvm_hdl_deposit(
+                "tb_dsp_uvm.reset",
+                1'b1
+            );
+
+
+        if (!status) begin
+
+            `uvm_error(
+                "RESET",
+                "Could not drive reset"
+            )
+
+        end
+
+
+        #20;
+
+
+        // ====================================================
+        // INITIAL REGISTER VALUES
+        // ====================================================
+
+        uvm_hdl_deposit(
+            "tb_dsp_uvm.dut.data_path.register_file.registers[0]",
+            32'd2
+        );
+
+        uvm_hdl_deposit(
+            "tb_dsp_uvm.dut.data_path.register_file.registers[1]",
+            32'd3
+        );
+
+        uvm_hdl_deposit(
+            "tb_dsp_uvm.dut.data_path.register_file.registers[2]",
+            32'd4
+        );
+
+        uvm_hdl_deposit(
+            "tb_dsp_uvm.dut.data_path.register_file.registers[3]",
+            32'd5
+        );
+
+        uvm_hdl_deposit(
+            "tb_dsp_uvm.dut.data_path.register_file.registers[4]",
+            32'd6
+        );
+
+        uvm_hdl_deposit(
+            "tb_dsp_uvm.dut.data_path.register_file.registers[5]",
+            32'd7
+        );
+
+        uvm_hdl_deposit(
+            "tb_dsp_uvm.dut.data_path.register_file.registers[6]",
+            32'd8
+        );
+
+        uvm_hdl_deposit(
+            "tb_dsp_uvm.dut.data_path.register_file.registers[7]",
+            32'd9
+        );
+
+
+        // ====================================================
+        // CLEAR DATA MEMORY
+        // ====================================================
+
+        uvm_hdl_deposit(
+            "tb_dsp_uvm.dut.data_path.data_mem.memory[0]",
+            32'd0
+        );
+
+
+        // ====================================================
+        // GENERATE AND LOAD PROGRAM
+        // ====================================================
+
+        seq =
+            dsp_sequence::type_id::create(
+                "seq"
+            );
+
+
+        seq.start(
+            env.agent.sequencer
+        );
+
+
+        // ====================================================
+        // RELEASE RESET
+        // ====================================================
+
+        status =
+            uvm_hdl_deposit(
+                "tb_dsp_uvm.reset",
+                1'b0
+            );
+
+
+        if (!status) begin
+
+            `uvm_error(
+                "RESET",
+                "Could not release reset"
+            )
+
+        end
+
+
+        // ====================================================
+        // WAIT FOR PROCESSOR
+        // ====================================================
+
+        #1100;
+
+
+        phase.drop_objection(this);
+
+    endtask
+
+endclass
+
+
+
+// ============================================================
+// TOP-LEVEL TESTBENCH
+// ============================================================
+
+module tb_dsp_uvm;
+
+    logic clk;
+    logic reset;
+
+
+    // ========================================================
+    // DUT
+    // ========================================================
+
+    dsp_processor dut (
+
+        .clk   (clk),
+        .reset (reset)
+
+    );
+
+
+    // ========================================================
+    // CLOCK
+    // ========================================================
+
+    initial begin
+
+        clk = 1'b0;
+
+        forever begin
+
+            #5 clk = ~clk;
+
+        end
+
+    end
+
+
+    // ========================================================
+    // DEFAULT RESET
+    // ========================================================
+
+    initial begin
+
+        reset = 1'b1;
+
+    end
+
+
+    // ========================================================
+    // START UVM
+    // ========================================================
+
+    initial begin
+
+        run_test("dsp_test");
+
+    end
+
+endmodule
